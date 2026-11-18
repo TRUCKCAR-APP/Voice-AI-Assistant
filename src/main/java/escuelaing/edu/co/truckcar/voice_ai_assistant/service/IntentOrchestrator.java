@@ -24,7 +24,8 @@ import java.util.Set;
 @Service
 public class IntentOrchestrator {
 
-    static final Set<String> ALERT_TYPES = Set.of("landslide", "danger", "workshop", "police", "scale", "bridge", "rest");
+    static final Set<String> ALERT_TYPES = Set.of("landslide", "danger", "workshop", "police", "scale", "bridge", "rest",
+            "traffic");
     static final Set<String> LOAD_FIELDS = Set.of("eta", "destination", "weight", "summary");
     static final int MAX_REPLY = 240;
 
@@ -38,7 +39,8 @@ public class IntentOrchestrator {
               "intent": una de REPORT, SOS, NEARBY_ALERTS, ACCEPT_LOAD, REJECT_LOAD, START_TRIP, CONFIRM_DELIVERY,
                         REROUTE, REPEAT, HOURS, LOAD_INFO, HELP, CHAT, UNKNOWN
               "alertType": solo con REPORT: landslide (derrumbe), danger (accidente), workshop (obra o vía cerrada),
-                        police (retén o policía), scale (báscula), bridge (gálibo o puente bajo), rest (parador seguro)
+                        police (retén o policía), scale (báscula), bridge (gálibo o puente bajo), rest (parador seguro),
+                        traffic (tráfico pesado, trancón o congestión)
               "closure": solo con REPORT workshop: true si la vía está cerrada o bloqueada
               "field": solo con LOAD_INFO: eta (cuánto falta o a qué hora llega), destination (a dónde va),
                         weight (peso), summary (qué lleva)
@@ -46,7 +48,7 @@ public class IntentOrchestrator {
               "reply": con CHAT, HELP o UNKNOWN, una o dos frases cortas en español para leer en voz alta
             Significado: REPORT avisar un peligro en la vía; SOS emergencia o pedir ayuda urgente; NEARBY_ALERTS qué
             alertas hay cerca; ACCEPT_LOAD o REJECT_LOAD responder una propuesta de carga; START_TRIP empezar el viaje;
-            CONFIRM_DELIVERY registrar la entrega; REROUTE cambiar o recalcular la ruta; REPEAT repetir la instrucción de
+            CONFIRM_DELIVERY registrar la entrega; REROUTE cambiar o recalcular la ruta (también si pide salir de un trancón o evitar el tráfico); REPEAT repetir la instrucción de
             navegación; HOURS horas de conducción y descanso; LOAD_INFO datos de la carga o del viaje; HELP qué se puede
             decir; CHAT una pregunta general de conducción o seguridad vial que no pide ninguna acción.
             Reglas:

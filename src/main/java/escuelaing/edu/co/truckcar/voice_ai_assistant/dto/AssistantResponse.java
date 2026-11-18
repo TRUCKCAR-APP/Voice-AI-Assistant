@@ -7,7 +7,7 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * teléfono: este servicio no llama a ningún otro servicio ni cambia nada por su cuenta.
  *
  * @param intent     una de {@link IntentAction}
- * @param alertType  REPORT: landslide, danger, workshop, police, scale, bridge o rest
+ * @param alertType  REPORT: landslide, danger, workshop, police, scale, bridge, rest o traffic
  * @param closure    REPORT de tipo workshop: la vía está cerrada (no solo en obra)
  * @param field      LOAD_INFO: eta, destination, weight o summary
  * @param avoidAhead REROUTE: evitar el tramo de adelante

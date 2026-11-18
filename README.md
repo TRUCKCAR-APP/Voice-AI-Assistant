@@ -31,7 +31,7 @@ voz ─► STT del teléfono ─► reglas locales ─┬─► acción (con con
 
 | Intención | Campo | Valores |
 |---|---|---|
-| `REPORT` | `alertType` | `landslide`, `danger`, `workshop`, `police`, `scale`, `bridge`, `rest` |
+| `REPORT` | `alertType` | `landslide`, `danger`, `workshop`, `police`, `scale`, `bridge`, `rest`, `traffic` |
 | `REPORT` de tipo `workshop` | `closure` | `true` o `false` |
 | `LOAD_INFO` | `field` | `eta`, `destination`, `weight`, `summary` |
 | `REROUTE` | `avoidAhead` | `true` o `false` |
@@ -67,7 +67,7 @@ voz ─► STT del teléfono ─► reglas locales ─┬─► acción (con con
 ## Desarrollo
 
 ```bash
-./mvnw clean verify          # 22 pruebas, sin Azure, Redis ni base de datos
+./mvnw clean verify          # 23 pruebas, sin Azure, Redis ni base de datos
 ```
 
 En la plataforma completa, el servicio se levanta con el `docker-compose.yml` de Deployment-Infrastructure como `voice-ai-assistant`.
