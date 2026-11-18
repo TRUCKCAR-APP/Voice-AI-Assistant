@@ -1,25 +1,61 @@
 server:
-  port: 8085
+  port: 8088
+
 spring:
   application:
-    name: voice-ai-assistant
-  ai:
-    azure:
-      openai:
-        api-key: ${AZURE_OPENAI_KEY}
-        endpoint: ${AZURE_OPENAI_ENDPOINT}
-        chat:
-          options:
-            deployment-name: ${AZURE_OPENAI_DEPLOYMENT}
+    name: ms-voice-ai-assistant
+  mvc:
+    # Errores en formato RFC 7807 (application/problem+json), como el resto de servicios.
+    problemdetails:
+      enabled: true
   data:
     redis:
-      host: localhost
-      port: 6379
+      host: ${SPRING_DATA_REDIS_HOST:localhost}
+      port: ${SPRING_DATA_REDIS_PORT:6379}
+      timeout: 500ms
+      connect-timeout: 500ms
+
+# Azure OpenAI (el mismo recurso que Route-AI-agent). Sin endpoint ni clave el servicio arranca igual y responde
+# intent=UNKNOWN: el Copiloto sigue funcionando con su intérprete local.
+azure:
+  openai:
+    endpoint: ${AZURE_OPENAI_ENDPOINT:}
+    api-key: ${AZURE_OPENAI_KEY:}
+    deployment-name: ${AZURE_OPENAI_DEPLOYMENT:gpt-4.1-mini}
+    timeout: ${TRUCKCAR_VOICE_AI_TIMEOUT:4s}
 
 truckcar:
-  jwt:
-    secret: ${TRUCKCAR_JWT_SECRET}
-  services:
-    notifications: http://localhost:8083
-    route-agent: http://localhost:8084
-    load-allocation: http://localhost:8082
+  voice:
+    # Turnos (orden + respuesta) que se recuerdan por conductor y durante cuánto tiempo.
+    memory-turns: 3
+    memory-ttl: 10m
+
+# ── Observabilidad ──────────────────────────────────────────────────────────────────────────────
+# /actuator/prometheus solo es accesible dentro de la red interna: el api-gateway no enruta /actuator/**.
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,prometheus
+  health:
+    # La memoria en Redis es opcional: una caída de Redis no debe marcar el servicio como caído.
+    redis:
+      enabled: false
+  metrics:
+    tags:
+      application: ${spring.application.name}
+    distribution:
+      percentiles-histogram:
+        http.server.requests: true
+  tracing:
+    sampling:
+      probability: ${TRUCKCAR_TRACING_SAMPLING_PROBABILITY:1.0}
+    baggage:
+      remote-fields: X-Correlation-Id
+      correlation:
+        fields: X-Correlation-Id
+
+logging:
+  include-application-name: false
+  pattern:
+    correlation: "[${spring.application.name:},%X{traceId:-},%X{spanId:-}] [cid=%X{X-Correlation-Id:-}] "
