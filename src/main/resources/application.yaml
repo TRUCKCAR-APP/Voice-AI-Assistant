@@ -1,0 +1,25 @@
+server:
+  port: 8085
+spring:
+  application:
+    name: voice-ai-assistant
+  ai:
+    azure:
+      openai:
+        api-key: ${AZURE_OPENAI_KEY}
+        endpoint: ${AZURE_OPENAI_ENDPOINT}
+        chat:
+          options:
+            deployment-name: ${AZURE_OPENAI_DEPLOYMENT}
+  data:
+    redis:
+      host: localhost
+      port: 6379
+
+truckcar:
+  jwt:
+    secret: ${TRUCKCAR_JWT_SECRET}
+  services:
+    notifications: http://localhost:8083
+    route-agent: http://localhost:8084
+    load-allocation: http://localhost:8082
