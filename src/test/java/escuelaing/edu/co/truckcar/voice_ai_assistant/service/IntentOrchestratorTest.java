@@ -74,6 +74,15 @@ class IntentOrchestratorTest {
     }
 
     @Test
+    void heavyTrafficIsReportable() {
+        model.answer = "{\"intent\":\"REPORT\",\"alertType\":\"traffic\",\"closure\":true}";
+        AssistantResponse r = ask("esto está embotellado hace una hora");
+        assertThat(r.intent()).isEqualTo(IntentAction.REPORT);
+        assertThat(r.alertType()).isEqualTo("traffic");
+        assertThat(r.closure()).isFalse();
+    }
+
+    @Test
     void closureOnlyAppliesToWorkshop() {
         model.answer = "{\"intent\":\"REPORT\",\"alertType\":\"danger\",\"closure\":true}";
         assertThat(ask("se volteó una tractomula").closure()).isFalse();
