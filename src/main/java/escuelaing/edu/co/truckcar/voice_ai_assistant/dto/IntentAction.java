@@ -13,6 +13,8 @@ public enum IntentAction {
     START_TRIP,
     CONFIRM_DELIVERY,
     REROUTE,
+    /** Ir a un lugar que no es el destino de la carga: la app lo busca y ofrece las opciones. */
+    NAVIGATE,
     REPEAT,
     HOURS,
     LOAD_INFO,

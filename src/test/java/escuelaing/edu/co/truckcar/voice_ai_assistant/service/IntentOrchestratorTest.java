@@ -97,6 +97,22 @@ class IntentOrchestratorTest {
     }
 
     @Test
+    void navigateCarriesThePlaceToSearch() {
+        model.answer = "{\"intent\":\"NAVIGATE\",\"place\":\"  **Escuela Colombiana de Ingeniería**\\n Julio Garavito \"}";
+        AssistantResponse r = ask("necesito ir a la escuela colombiana de ingeniería julio garavito");
+        assertThat(r.intent()).isEqualTo(IntentAction.NAVIGATE);
+        assertThat(r.place()).isEqualTo("Escuela Colombiana de Ingeniería Julio Garavito");
+        assertThat(r.reply()).isNull();
+    }
+
+    @Test
+    void navigateWithoutAPlaceIsUnknown() {
+        model.answer = "{\"intent\":\"NAVIGATE\",\"place\":\" \"}";
+        assertThat(ask("quiero ir").intent()).isEqualTo(IntentAction.UNKNOWN);
+        assertThat(IntentOrchestrator.cleanPlace("x".repeat(200))).hasSize(120);
+    }
+
+    @Test
     void inventedIntentBecomesUnknown() {
         model.answer = "{\"intent\":\"DELETE_ACCOUNT\",\"reply\":\"Listo\"}";
         assertThat(ask("borra mi cuenta").intent()).isEqualTo(IntentAction.UNKNOWN);

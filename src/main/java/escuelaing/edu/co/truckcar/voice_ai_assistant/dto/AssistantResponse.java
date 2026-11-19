@@ -13,10 +13,16 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * @param avoidAhead REROUTE: evitar el tramo de adelante
  * @param reply      frase corta para decir en voz alta (CHAT, UNKNOWN y HELP)
  * @param source     AZURE_OPENAI o NONE (sin modelo configurado o sin respuesta válida)
+ * @param place      NAVIGATE: el lugar al que quiere ir, tal como lo nombró (la app lo busca con HERE)
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record AssistantResponse(IntentAction intent, String alertType, Boolean closure, String field,
-                                Boolean avoidAhead, String reply, String source) {
+                                Boolean avoidAhead, String reply, String source, String place) {
+
+    public AssistantResponse(IntentAction intent, String alertType, Boolean closure, String field, Boolean avoidAhead,
+                             String reply, String source) {
+        this(intent, alertType, closure, field, avoidAhead, reply, source, null);
+    }
 
     public static final String SOURCE_MODEL = "AZURE_OPENAI";
     public static final String SOURCE_NONE = "NONE";
