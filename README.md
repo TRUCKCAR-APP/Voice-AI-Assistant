@@ -25,7 +25,7 @@ voz ─► STT del teléfono ─► reglas locales ─┬─► acción (con con
 
 **Validación de la petición:** `text` es obligatorio y tiene como máximo 300 caracteres. Si falla, responde 400 (RFC 7807). Sin `X-Auth-User` responde 401.
 
-**Intenciones:** `REPORT`, `SOS`, `NEARBY_ALERTS`, `ACCEPT_LOAD`, `REJECT_LOAD`, `START_TRIP`, `CONFIRM_DELIVERY`, `REROUTE`, `REPEAT`, `HOURS`, `LOAD_INFO`, `HELP`, `CHAT` (respuesta hablada sin acción) y `UNKNOWN`.
+**Intenciones:** `REPORT`, `SOS`, `NEARBY_ALERTS`, `ACCEPT_LOAD`, `REJECT_LOAD`, `START_TRIP`, `CONFIRM_DELIVERY`, `REROUTE`, `NAVIGATE`, `REPEAT`, `HOURS`, `LOAD_INFO`, `HELP`, `CHAT` (respuesta hablada sin acción) y `UNKNOWN`.
 
 **Campos según la intención:**
 
@@ -35,6 +35,7 @@ voz ─► STT del teléfono ─► reglas locales ─┬─► acción (con con
 | `REPORT` de tipo `workshop` | `closure` | `true` o `false` |
 | `LOAD_INFO` | `field` | `eta`, `destination`, `weight`, `summary` |
 | `REROUTE` | `avoidAhead` | `true` o `false` |
+| `NAVIGATE` | `place` | el lugar al que quiere ir, con sus palabras ("Escuela Colombiana de Ingeniería"); la app lo busca con HERE y ofrece las opciones |
 | `CHAT`, `HELP`, `UNKNOWN` | `reply` | texto para leer en voz alta |
 
 ## Seguridad
@@ -67,7 +68,7 @@ voz ─► STT del teléfono ─► reglas locales ─┬─► acción (con con
 ## Desarrollo
 
 ```bash
-./mvnw clean verify          # 23 pruebas, sin Azure, Redis ni base de datos
+./mvnw clean verify          # 25 pruebas, sin Azure, Redis ni base de datos
 ```
 
 En la plataforma completa, el servicio se levanta con el `docker-compose.yml` de Deployment-Infrastructure como `voice-ai-assistant`.

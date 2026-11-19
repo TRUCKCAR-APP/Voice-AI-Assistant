@@ -37,7 +37,7 @@ public class IntentOrchestrator {
             Recibes UNA orden ya transcrita de lo que dijo el conductor mientras conduce y la clasificas.
             Responde SOLO un objeto JSON con estas claves:
               "intent": una de REPORT, SOS, NEARBY_ALERTS, ACCEPT_LOAD, REJECT_LOAD, START_TRIP, CONFIRM_DELIVERY,
-                        REROUTE, REPEAT, HOURS, LOAD_INFO, HELP, CHAT, UNKNOWN
+                        REROUTE, NAVIGATE, REPEAT, HOURS, LOAD_INFO, HELP, CHAT, UNKNOWN
               "alertType": solo con REPORT: landslide (derrumbe), danger (accidente), workshop (obra o vía cerrada),
                         police (retén o policía), scale (báscula), bridge (gálibo o puente bajo), rest (parador seguro),
                         traffic (tráfico pesado, trancón o congestión)
@@ -45,10 +45,13 @@ public class IntentOrchestrator {
               "field": solo con LOAD_INFO: eta (cuánto falta o a qué hora llega), destination (a dónde va),
                         weight (peso), summary (qué lleva)
               "avoidAhead": solo con REROUTE: true si pide evitar el tramo de adelante
+              "place": solo con NAVIGATE: el lugar al que quiere ir, con sus palabras y sin el verbo
+                        ("necesito ir a la Escuela Colombiana de Ingeniería" -> "Escuela Colombiana de Ingeniería")
               "reply": con CHAT, HELP o UNKNOWN, una o dos frases cortas en español para leer en voz alta
             Significado: REPORT avisar un peligro en la vía; SOS emergencia o pedir ayuda urgente; NEARBY_ALERTS qué
             alertas hay cerca; ACCEPT_LOAD o REJECT_LOAD responder una propuesta de carga; START_TRIP empezar el viaje;
-            CONFIRM_DELIVERY registrar la entrega; REROUTE cambiar o recalcular la ruta (también si pide salir de un trancón o evitar el tráfico); REPEAT repetir la instrucción de
+            CONFIRM_DELIVERY registrar la entrega; REROUTE cambiar o recalcular la ruta (también si pide salir de un trancón o evitar el tráfico); NAVIGATE ir o
+            llegar a un lugar concreto (una dirección, empresa, bodega, ciudad, universidad, estación de servicio); REPEAT repetir la instrucción de
             navegación; HOURS horas de conducción y descanso; LOAD_INFO datos de la carga o del viaje; HELP qué se puede
             decir; CHAT una pregunta general de conducción o seguridad vial que no pide ninguna acción.
             Reglas:
@@ -125,6 +128,11 @@ public class IntentOrchestrator {
             }
             case REROUTE -> new AssistantResponse(intent, null, null, null,
                     node.path("avoidAhead").asBoolean(false), null, source);
+            case NAVIGATE -> {
+                String place = cleanPlace(node.path("place").asText(""));
+                yield place == null ? AssistantResponse.unknown(NOT_UNDERSTOOD)
+                        : new AssistantResponse(intent, null, null, null, null, null, source, place);
+            }
             case CHAT -> reply == null ? AssistantResponse.unknown(NOT_UNDERSTOOD)
                     : new AssistantResponse(intent, null, null, null, null, reply, source);
             case UNKNOWN -> new AssistantResponse(intent, null, null, null, null,
@@ -140,6 +148,14 @@ public class IntentOrchestrator {
         } catch (IllegalArgumentException e) {
             return IntentAction.UNKNOWN;
         }
+    }
+
+    /** Nombre del lugar para buscarlo: una línea, sin marcas ni comillas, de 2 a 120 caracteres. */
+    static String cleanPlace(String place) {
+        if (place == null) return null;
+        String plain = place.replaceAll("[*_#`<>\"]", "").replaceAll("\\s+", " ").strip();
+        if (plain.length() < 2) return null;
+        return plain.length() > 120 ? plain.substring(0, 120).strip() : plain;
     }
 
     /** Una o dos frases para leer en voz alta: sin saltos de línea, sin marcas y con un largo máximo. */
