@@ -14,14 +14,23 @@ import com.fasterxml.jackson.annotation.JsonInclude;
  * @param reply      frase corta para decir en voz alta (CHAT, UNKNOWN y HELP)
  * @param source     AZURE_OPENAI o NONE (sin modelo configurado o sin respuesta válida)
  * @param place      NAVIGATE: el lugar al que quiere ir, tal como lo nombró (la app lo busca con HERE)
+ * @param category   FIND_PLACES: hotel, fuel, restaurant, store, truck_parking o workshop
+ * @param cheap      FIND_PLACES: el conductor pide opciones económicas
+ * @param scope      NEARBY_ALERTS: around (alrededor de su posición) o route (en la ruta)
  */
 @JsonInclude(JsonInclude.Include.NON_NULL)
 public record AssistantResponse(IntentAction intent, String alertType, Boolean closure, String field,
-                                Boolean avoidAhead, String reply, String source, String place) {
+                                Boolean avoidAhead, String reply, String source, String place, String category,
+                                Boolean cheap, String scope) {
+
+    public AssistantResponse(IntentAction intent, String alertType, Boolean closure, String field, Boolean avoidAhead,
+                             String reply, String source, String place) {
+        this(intent, alertType, closure, field, avoidAhead, reply, source, place, null, null, null);
+    }
 
     public AssistantResponse(IntentAction intent, String alertType, Boolean closure, String field, Boolean avoidAhead,
                              String reply, String source) {
-        this(intent, alertType, closure, field, avoidAhead, reply, source, null);
+        this(intent, alertType, closure, field, avoidAhead, reply, source, null, null, null, null);
     }
 
     public static final String SOURCE_MODEL = "AZURE_OPENAI";

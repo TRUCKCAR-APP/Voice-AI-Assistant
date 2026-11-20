@@ -15,6 +15,10 @@ public enum IntentAction {
     REROUTE,
     /** Ir a un lugar que no es el destino de la carga: la app lo busca y ofrece las opciones. */
     NAVIGATE,
+    /** Lugares cerca del camión por categoría (hotel, combustible, comida, tienda, parqueadero, taller). */
+    FIND_PLACES,
+    /** Próximo peaje de la ruta: distancia y tarifa de HERE para el camión. */
+    TOLLS,
     REPEAT,
     HOURS,
     LOAD_INFO,
