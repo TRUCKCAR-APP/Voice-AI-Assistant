@@ -253,6 +253,36 @@ class IntentOrchestratorTest {
     }
 
     @Test
+    void stoppingOnTheRouteKeepsTheSameTypesAsThePhoneAndRouteAi() {
+        model.answer = "{\"intent\":\"FIND_PLACES\",\"category\":\"rest\",\"fatigue\":true}";
+        AssistantResponse tired = ask("parcero voy cabeceando, necesito echarme un sueñito");
+        assertThat(tired.intent()).isEqualTo(IntentAction.FIND_PLACES);
+        assertThat(tired.category()).isEqualTo("rest");
+        assertThat(tired.fatigue()).isTrue();
+        model.answer = "{\"intent\":\"FIND_PLACES\",\"category\":\"tinto\"}";
+        AssistantResponse coffee = ask("me provoca un tintico");
+        assertThat(coffee.category()).isEqualTo("coffee");
+        assertThat(coffee.fatigue()).isNull();
+        for (String category : List.of("toilet", "atm", "pharmacy", "hospital", "restaurant")) {
+            model.answer = "{\"intent\":\"FIND_PLACES\",\"category\":\"" + category + "\"}";
+            assertThat(ask("lugar " + category).category()).isEqualTo(category);
+        }
+    }
+
+    @Test
+    void theStopCanBeRemovedAskedAboutOrLeftToContinueTheTrip() {
+        model.answer = "{\"intent\":\"STOP_REMOVE\",\"reply\":\"Quité la parada\"}";
+        AssistantResponse remove = ask("mejor no paremos, sigamos de una");
+        assertThat(remove.intent()).isEqualTo(IntentAction.STOP_REMOVE);
+        assertThat(remove.reply()).as("la app lo dice con lo que de verdad hizo").isNull();
+        model.answer = "{\"intent\":\"STOP_INFO\"}";
+        assertThat(ask("qué tan lejos queda donde vamos a comer").intent()).isEqualTo(IntentAction.STOP_INFO);
+        model.answer = "{\"intent\":\"RESUME_TRIP\"}";
+        assertThat(ask("ya almorcé, arranquemos").intent()).isEqualTo(IntentAction.RESUME_TRIP);
+        assertThat(IntentOrchestrator.SYSTEM_PROMPT).contains("STOP_REMOVE", "STOP_INFO", "RESUME_TRIP", "\"fatigue\"");
+    }
+
+    @Test
     void tollsAndRoadStatusAreQueriesTheAppAnswersWithRealData() {
         model.answer = "{\"intent\":\"TOLLS\",\"reply\":\"El peaje cuesta 20.000 pesos\"}";
         AssistantResponse tolls = ask("cuánto me falta para el próximo peaje y cuánto vale");

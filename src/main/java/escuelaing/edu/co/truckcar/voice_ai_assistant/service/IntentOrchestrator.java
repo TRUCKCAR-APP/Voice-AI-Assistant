@@ -33,11 +33,19 @@ public class IntentOrchestrator {
     static final Set<String> ALERT_TYPES = Set.of("landslide", "danger", "workshop", "police", "scale", "bridge", "rest",
             "traffic");
     static final Set<String> LOAD_FIELDS = Set.of("eta", "destination", "weight", "summary");
-    static final Set<String> PLACE_CATEGORIES = Set.of("hotel", "fuel", "restaurant", "store", "truck_parking", "workshop");
+    /** Los mismos tipos que el teléfono (js/services/voiceIntents.js, PLACE_CATEGORIES) y Route-AI (StopCategory). */
+    static final Set<String> PLACE_CATEGORIES = Set.of("hotel", "fuel", "restaurant", "store", "truck_parking", "workshop",
+            "rest", "coffee", "toilet", "atm", "pharmacy", "hospital");
     /** Nombres en español que el modelo podría devolver en vez del código. */
-    static final Map<String, String> PLACE_SYNONYMS = Map.of("gasolinera", "fuel", "estacion", "fuel", "restaurante",
-            "restaurant", "tienda", "store", "parqueadero", "truck_parking", "parqueadero_mulas", "truck_parking",
-            "taller", "workshop", "hospedaje", "hotel");
+    static final Map<String, String> PLACE_SYNONYMS = Map.ofEntries(
+            Map.entry("gasolinera", "fuel"), Map.entry("estacion", "fuel"), Map.entry("restaurante", "restaurant"),
+            Map.entry("comida", "restaurant"), Map.entry("tienda", "store"), Map.entry("parqueadero", "truck_parking"),
+            Map.entry("parqueadero_mulas", "truck_parking"), Map.entry("taller", "workshop"), Map.entry("hospedaje", "hotel"),
+            Map.entry("descanso", "rest"), Map.entry("descansar", "rest"), Map.entry("cafe", "coffee"),
+            Map.entry("tinto", "coffee"), Map.entry("bano", "toilet"), Map.entry("baño", "toilet"),
+            Map.entry("cajero", "atm"), Map.entry("drogueria", "pharmacy"), Map.entry("droguería", "pharmacy"),
+            Map.entry("farmacia", "pharmacy"), Map.entry("clinica", "hospital"), Map.entry("clínica", "hospital"),
+            Map.entry("urgencias", "hospital"));
     static final ZoneId BOGOTA = ZoneId.of("America/Bogota");
     private static final DateTimeFormatter DATE = DateTimeFormatter.ofPattern("EEEE d 'de' MMMM 'de' yyyy",
             Locale.forLanguageTag("es-CO"));
@@ -57,7 +65,8 @@ public class IntentOrchestrator {
             ejecuta con datos reales (HERE, alertas de la comunidad, la ruta calculada) y lee la respuesta en voz alta.
             Responde SOLO un objeto JSON con estas claves:
               "intent": una de REPORT, SOS, NEARBY_ALERTS, ACCEPT_LOAD, REJECT_LOAD, START_TRIP, CONFIRM_DELIVERY,
-                        REROUTE, NAVIGATE, FIND_PLACES, TOLLS, REPEAT, HOURS, LOAD_INFO, HELP, CHAT, UNKNOWN
+                        REROUTE, NAVIGATE, FIND_PLACES, STOP_REMOVE, STOP_INFO, RESUME_TRIP, TOLLS, REPEAT, HOURS,
+                        LOAD_INFO, HELP, CHAT, UNKNOWN
               "alertType": solo con REPORT: landslide (derrumbe), danger (accidente), workshop (obra o vía cerrada),
                         police (retén o policía), scale (báscula), bridge (gálibo o puente bajo), rest (parador seguro),
                         traffic (tráfico pesado, trancón o congestión)
@@ -67,18 +76,27 @@ public class IntentOrchestrator {
               "avoidAhead": solo con REROUTE: true si pide evitar el tramo de adelante
               "place": solo con NAVIGATE: el lugar al que quiere ir, con sus palabras y sin el verbo
                         ("necesito ir a la Escuela Colombiana de Ingeniería" -> "Escuela Colombiana de Ingeniería")
-              "category": solo con FIND_PLACES: hotel (hotel u hospedaje), fuel (gasolinera, estación de servicio,
-                        bomba, ACPM o diésel), restaurant (comida o restaurante), store (tienda), truck_parking
-                        (parqueadero o garaje apto para mula o tractomula), workshop (taller, montallantas o mecánico)
+              "category": solo con FIND_PLACES: rest (descansar, parar un rato, estirar las piernas, una siesta),
+                        restaurant (comer, almorzar, hambre, corrientazo, asadero), coffee (un tinto o un café),
+                        hotel (dormir la noche, hotel, residencias u hospedaje), fuel (tanquear, gasolinera, estación de
+                        servicio, bomba, ACPM o diésel, ir en reserva), toilet (baño), truck_parking (parqueadero o
+                        garaje apto para mula o tractomula), workshop (taller, montallantas, mecánico, llanta pinchada),
+                        store (tienda o mecato), atm (cajero o sacar plata), pharmacy (droguería o farmacia),
+                        hospital (hospital, clínica o urgencias)
               "cheap": solo con FIND_PLACES: true si pide algo barato, económico o para ahorrar
+              "fatigue": solo con FIND_PLACES: true si dice que tiene sueño, que se está durmiendo o que está muy
+                        cansado («estoy mamado», «estoy fundido», «voy cabeceando»)
               "scope": solo con NEARBY_ALERTS: around (cerca de donde está) o route (en toda la ruta)
               "reply": con CHAT, HELP o UNKNOWN, una o dos frases cortas en español para leer en voz alta
             Significado: REPORT avisar un peligro en la vía; SOS emergencia o pedir ayuda urgente; NEARBY_ALERTS si hay
             accidentes, trancones, cierres o restricciones cerca o en la ruta; ACCEPT_LOAD o REJECT_LOAD responder una
             propuesta de carga; START_TRIP empezar el viaje; CONFIRM_DELIVERY registrar la entrega; REROUTE cambiar o
             recalcular la ruta (también si pide salir de un trancón o evitar el tráfico); NAVIGATE ir o llegar a un
-            lugar concreto con nombre (una dirección, empresa, bodega, ciudad, universidad); FIND_PLACES buscar cerca un
-            tipo de lugar sin nombre concreto (dónde dormir, tanquear, comer, parquear la mula o arreglar el camión);
+            lugar concreto con nombre (una dirección, empresa, bodega, ciudad, universidad); FIND_PLACES un tipo de
+            lugar para parar, sin nombre concreto (comer, descansar, dormir, tanquear, ir al baño, parquear la mula o
+            arreglar el camión): la app propone lugares sobre la ruta y el elegido queda como parada; STOP_REMOVE quitar
+            o cancelar la parada («ya no quiero parar», «sigamos derecho»); STOP_INFO cuánto falta para la parada o
+            cuál es; RESUME_TRIP seguir el viaje después de parar («seguimos», «ya comí, vámonos», «listo, arranquemos»);
             TOLLS cuánto falta para el próximo peaje, cuánto cuesta o cuántos peajes hay en la ruta; REPEAT repetir la
             instrucción de navegación; HOURS horas de conducción y descanso; LOAD_INFO datos de la carga o del viaje;
             HELP qué se puede decir; CHAT una pregunta general de conducción o seguridad vial que no pide ninguna acción.
@@ -177,7 +195,7 @@ public class IntentOrchestrator {
                 String category = placeCategory(node.path("category").asText(""));
                 yield category == null ? AssistantResponse.unknown(NOT_UNDERSTOOD)
                         : new AssistantResponse(intent, null, null, null, null, null, source, null, category,
-                        node.path("cheap").asBoolean(false), null);
+                        node.path("cheap").asBoolean(false), null, node.path("fatigue").asBoolean(false) ? Boolean.TRUE : null);
             }
             case NEARBY_ALERTS -> new AssistantResponse(intent, null, null, null, null, null, source, null, null, null,
                     "route".equalsIgnoreCase(node.path("scope").asText("")) ? "route" : "around");
